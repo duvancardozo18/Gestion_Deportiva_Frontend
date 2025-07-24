@@ -250,7 +250,7 @@ const CompetenciaDetallePage = () => {
                 {awardsLoading ? (
                   <div className="text-center py-4">Cargando premiación...</div>
                 ) : awardsError ? (
-                  <div className="text-center py-4 text-red-500">{awardsError}</div>
+                  <div className="text-center py-4 text-gray-500">No hay información de premiación.</div>
                 ) : awards.length === 0 ? (
                   <div className="text-center py-4 text-gray-500">No hay información de premiación.</div>
                 ) : (
@@ -291,7 +291,7 @@ const CompetenciaDetallePage = () => {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center">
-                  <Trophy className="w-5 h-5 mr-2" />
+                  <Users className="w-5 h-5 mr-2" />
                   Equipos
                 </CardTitle>
               </CardHeader>

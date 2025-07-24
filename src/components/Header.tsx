@@ -71,9 +71,11 @@ const Header = () => {
               )}
             </div>
 
+            {/*  
             <Link to="/convocatorias" className="text-sm font-medium hover:text-blue-600">
               Convocatorias
             </Link>
+            */}
             <Link to="/entrenadores" className="text-sm font-medium hover:text-blue-600">
               Entrenadores
             </Link>

@@ -9,33 +9,32 @@ import { Calendar, MapPin, ChevronLeft, ChevronRight } from "lucide-react"
 
 const HomePage = () => {
   const [currentSlide, setCurrentSlide] = useState(0)
+  const [slides, setSlides] = useState<any[]>([])
 
-  const slides = [
-    {
-      title: "Inscripciones Abiertas",
-      subtitle: "Torneo Regional 2024",
-      description: "Únete a la competencia más emocionante de la región",
-      buttonText: "Inscribirse Ahora",
-      buttonLink: "/competencias",
-      background: "bg-gradient-to-r from-gray-600 to-gray-800",
-    },
-    {
-      title: "Copa Interclubes",
-      subtitle: "Febrero 2024",
-      description: "Los mejores equipos compiten por el título regional",
-      buttonText: "Ver Detalles",
-      buttonLink: "/competencias",
-      background: "bg-gradient-to-r from-blue-600 to-blue-800",
-    },
-    {
-      title: "Torneo Juvenil",
-      subtitle: "Categoría Sub-18",
-      description: "Formando el futuro del fútbol de salón",
-      buttonText: "Conoce Más",
-      buttonLink: "/competencias",
-      background: "bg-gradient-to-r from-green-600 to-green-800",
-    },
-  ]
+  useEffect(() => {
+    const fetchSlides = async () => {
+      try {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/tournaments`)
+        const data = await response.json()
+        // Mapear los datos para adaptarlos al formato del slider
+        const mappedSlides = data.slice(0, 5).map((t: any) => ({
+          title: t.nombre_torneo || "Torneo",
+          subtitle: t.estado || "Competencia",
+          description: (t.municipio || t.lugar)
+            ? `${t.municipio ? `Municipio: ${t.municipio}` : ""}${t.municipio && t.lugar ? " | " : ""}${t.lugar ? `Lugar: ${t.lugar}` : ""}`
+            : "Competencia de la liga",
+          buttonText: "Ver Detalles",
+          buttonLink: `/competencia/${encodeURIComponent(t.nombre_torneo.replace(/\s+/g, '-').toLowerCase())}`  ,
+          background: "bg-gradient-to-r from-gray-600 to-gray-800",
+          foto_torneo: t.foto_torneo,
+        }))
+        setSlides(mappedSlides)
+      } catch (error) {
+        setSlides([])
+      }
+    }
+    fetchSlides()
+  }, [])
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -52,7 +51,8 @@ const HomePage = () => {
     setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length)
   }
 
-  // Mock data - En producción esto vendría de la API
+
+  // Noticias (mock, unchanged)
   const noticias = [
     {
       id: 1,
@@ -77,35 +77,25 @@ const HomePage = () => {
     },
   ]
 
-  const competenciasRecientes = [
-    {
-      id: 1,
-      nombre: "Torneo Apertura 2024",
-      estado: "En Curso",
-      municipio: "Medellín",
-      lugar: "Coliseo Mayor",
-      fecha: "2024-01-15",
-      imagen: "/placeholder.svg?height=200&width=300",
-    },
-    {
-      id: 2,
-      nombre: "Copa Interclubes",
-      estado: "Inscripciones Abiertas",
-      municipio: "Bello",
-      lugar: "Polideportivo Central",
-      fecha: "2024-02-01",
-      imagen: "/placeholder.svg?height=200&width=300",
-    },
-    {
-      id: 3,
-      nombre: "Torneo Juvenil",
-      estado: "Programado",
-      municipio: "Itagüí",
-      lugar: "Cancha Municipal",
-      fecha: "2024-02-15",
-      imagen: "/placeholder.svg?height=200&width=300",
-    },
-  ]
+  // Competencias recientes desde API
+  const [competenciasRecientes, setCompetenciasRecientes] = useState<any[]>([])
+  const [loadingCompetencias, setLoadingCompetencias] = useState(true)
+
+  useEffect(() => {
+    const fetchCompetencias = async () => {
+      try {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/tournaments`)
+        const data = await response.json()
+        // Tomar solo los 3 primeros sin ordenar
+        setCompetenciasRecientes(data.slice(0, 3))
+      } catch (error) {
+        setCompetenciasRecientes([])
+      } finally {
+        setLoadingCompetencias(false)
+      }
+    }
+    fetchCompetencias()
+  }, [])
 
   const getEstadoBadge = (estado: string) => {
     switch (estado) {
@@ -124,28 +114,62 @@ const HomePage = () => {
     <div className="min-h-screen">
       {/* Hero Slider */}
       <section className="relative h-[500px] overflow-hidden">
-        {slides.map((slide, index) => (
-          <div
-            key={index}
-            className={`absolute inset-0 transition-transform duration-500 ease-in-out ${
-              index === currentSlide ? "translate-x-0" : index < currentSlide ? "-translate-x-full" : "translate-x-full"
-            }`}
-          >
-            <div className={`${slide.background} h-full flex items-center justify-center text-white relative`}>
-              <div className="absolute inset-0 bg-black bg-opacity-30"></div>
-              <div className="container mx-auto px-4 text-center relative z-10">
-                <h1 className="text-5xl md:text-7xl font-bold mb-4">{slide.title}</h1>
-                <h2 className="text-2xl md:text-3xl text-green-400 mb-6">{slide.subtitle}</h2>
-                <p className="text-xl md:text-2xl mb-8 max-w-2xl mx-auto">{slide.description}</p>
-                <Link to={slide.buttonLink}>
-                  <Button size="lg" className="bg-white text-green-600 hover:bg-gray-100 px-8 py-3 text-lg">
-                    {slide.buttonText}
-                  </Button>
-                </Link>
+        {slides.length === 0 ? (
+          <div className="flex items-center justify-center h-full text-white text-2xl">Cargando torneos...</div>
+        ) : (
+          slides.map((slide, index) => {
+            // Imagen de fondo
+            const bgImage = slide.foto_torneo
+              ? `url(${import.meta.env.VITE_API_URL.replace(/\/api\/?$/, "")}/storage/${slide.foto_torneo})`
+              : undefined
+            return (
+              <div
+                key={index}
+                className={`absolute inset-0 transition-transform duration-500 ease-in-out ${
+                  index === currentSlide ? "translate-x-0" : index < currentSlide ? "-translate-x-full" : "translate-x-full"
+                }`}
+                style={bgImage ? {
+                  backgroundImage: `${bgImage}`,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                  backgroundRepeat: 'no-repeat',
+                } : {}}
+              >
+                <div className="absolute inset-0 bg-black bg-opacity-70"></div>
+                
+                <div className="container mx-auto px-4 text-center relative z-10 flex flex-col items-center justify-center h-full">
+                    <div className="flex items-center justify-center mb-6 gap-3 animate-fade-in">
+                    {/* Navigation Arrows 
+                    <span className="inline-block px-4 py-1 rounded-full text-base md:text-lg font-semibold bg-white bg-opacity-80 text-green-700 shadow-md border border-green-300">
+                      {slide.subtitle}
+                    </span>
+                    */}
+                  </div>
+                  <h1 className="text-5xl md:text-7xl font-extrabold mb-4 text-white drop-shadow-2xl tracking-tight animate-fade-in">
+                    {slide.title}
+                  </h1>
+
+                  <div className="flex items-center justify-center mb-8 gap-2 animate-fade-in">
+                    <div className="px-6 py-4 rounded-2xl text-white bg-white/10 border border-white/30 shadow-xl backdrop-blur-md">
+                      <p className="text-lg md:text-xl font-bold leading-tight mb-1">
+                        {slide.description}
+                      </p>
+                      <p className="text-sm md:text-base font-medium opacity-90">
+                        {slide.subtitle}
+                      </p>
+                    </div>
+                  </div>
+
+                  <Link to={slide.buttonLink}>
+                    <Button size="lg" className="">
+                      {slide.buttonText}
+                    </Button>
+                  </Link>
+                </div>
               </div>
-            </div>
-          </div>
-        ))}
+            )
+          })
+        )}
 
         {/* Navigation Arrows */}
         <button
@@ -175,7 +199,7 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* Noticias Section */}
+      {/* Noticias Section 
       <section className="py-16 bg-gray-50">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
@@ -217,6 +241,8 @@ const HomePage = () => {
           </div>
         </div>
       </section>
+      */}
+
 
       {/* Competencias Recientes */}
       <section className="py-16">
@@ -228,48 +254,56 @@ const HomePage = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-            {competenciasRecientes.map((competencia) => (
-              <Card key={competencia.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-                <div className="relative h-48">
-                  <img
-                    src={competencia.imagen || "/placeholder.svg"}
-                    alt={competencia.nombre}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <CardHeader>
-                  <div className="flex justify-between items-start mb-2">
-                    <CardTitle className="text-lg">{competencia.nombre}</CardTitle>
-                    {getEstadoBadge(competencia.estado)}
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2 text-sm text-gray-600">
-                    <div className="flex items-center">
-                      <MapPin className="w-4 h-4 mr-2" />
-                      <span>
-                        {competencia.municipio} - {competencia.lugar}
-                      </span>
+          {loadingCompetencias ? (
+            <div className="text-center py-8">Cargando competencias...</div>
+          ) : (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                {competenciasRecientes.map((competencia) => (
+                  <Card key={competencia.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+                    <div className="relative h-48">
+                      <img
+                        src={competencia.foto_torneo ? `${import.meta.env.VITE_API_URL.replace(/\/api\/?$/, "")}/storage/${competencia.foto_torneo}` : "/placeholder.svg"}
+                        alt={competencia.nombre_torneo}
+                        className="w-full h-full object-cover"
+                      />
                     </div>
-                    <div className="flex items-center">
-                      <Calendar className="w-4 h-4 mr-2" />
-                      <span>{new Date(competencia.fecha).toLocaleDateString("es-ES")}</span>
-                    </div>
-                  </div>
-                  <Button className="w-full mt-4 bg-transparent" variant="outline">
-                    Ver Detalles
-                  </Button>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                    <CardHeader>
+                      <div className="flex justify-between items-start mb-2">
+                        <CardTitle className="text-lg">{competencia.nombre_torneo}</CardTitle>
+                        {getEstadoBadge(competencia.estado)}
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-2 text-sm text-gray-600">
+                        <div className="flex items-center">
+                          <MapPin className="w-4 h-4 mr-2" />
+                          <span>
+                            {competencia.municipio} - {competencia.lugar}
+                          </span>
+                        </div>
+                        <div className="flex items-center">
+                          <Calendar className="w-4 h-4 mr-2" />
+                          <span>{new Date(competencia.fecha_torneo).toLocaleDateString("es-ES")}</span>
+                        </div>
+                      </div>
+                      <Link to={`/competencia/${encodeURIComponent(competencia.nombre_torneo.replace(/\s+/g, '-').toLowerCase())}`}>
+                      <Button className="w-full mt-4 bg-transparent" variant="outline">
+                        Ver Detalles
+                      </Button>
+                       </Link>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
 
-          <div className="text-center">
-            <Link to="/competencias">
-              <Button size="lg">Ver Más Competencias</Button>
-            </Link>
-          </div>
+              <div className="text-center">
+                <Link to="/competencias">
+                  <Button size="lg">Ver Más Competencias</Button>
+                </Link>
+              </div>
+            </>
+          )}
         </div>
       </section>
 
