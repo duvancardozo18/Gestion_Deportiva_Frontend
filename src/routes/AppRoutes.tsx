@@ -33,7 +33,7 @@ const AppRoutes = () => {
 
         {/* Competencias */}
         <Route path="competencias" element={<CompetenciasPage />} />
-        <Route path="competencias/:id" element={<CompetenciaDetallePage />} />
+        <Route path="competencia/:nombre" element={<CompetenciaDetallePage />} />
         <Route path="competencias/:id/terminada" element={<CompetenciaTerminadaPage />} />
 
         {/* Clubes */}

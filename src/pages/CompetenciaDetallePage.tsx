@@ -1,5 +1,7 @@
 "use client"
 
+import { useEffect, useState } from "react"
+import axios from "axios"
 import { useParams, Link } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -8,33 +10,42 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Calendar, MapPin, User, Phone, Download, Trophy, Users, FileText } from "lucide-react"
 
 const CompetenciaDetallePage = () => {
-  const { id } = useParams()
+  const { nombre } = useParams();
+  const [competencia, setCompetencia] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Mock data - En producción esto vendría de la API
-  const competencia = {
-    id: id,
-    nombre: "Torneo Apertura 2024",
-    estado: "Inscripciones Abiertas",
-    municipio: "Medellín",
-    lugar: "Coliseo Mayor",
-    fecha: "2024-01-15",
-    descripcion:
-      "Torneo principal de la temporada con participación de todos los clubes afiliados. Una competencia que reúne a los mejores equipos de la región en busca del título de campeón.",
-    horarios: "Sábados y Domingos - 8:00 AM a 6:00 PM",
-    valorInscripcion: "$500.000",
-    valorArbitraje: "$50.000 por partido",
-    imagen: "/placeholder.svg?height=400&width=600",
-    encargado: {
-      nombre: "Juan Pérez",
-      contacto: "313 333 3333",
-    },
-    premiacion: {
-      primero: "Trofeo + $2.000.000",
-      segundo: "Trofeo + $1.000.000",
-      tercero: "Trofeo + $500.000",
-      cuarto: "Trofeo",
-    },
-  }
+  const cleanApiUrl = (url: string) => url.replace(/\/api\/?$/, "");
+  const formatFecha = (fecha: string) => {
+    const date = new Date(fecha);
+    if (isNaN(date.getTime())) return fecha;
+    return `${date.getDate().toString().padStart(2, "0")}/${(date.getMonth()+1).toString().padStart(2, "0")}/${date.getFullYear()}`;
+  };
+
+  useEffect(() => {
+    const fetchCompetencia = async () => {
+      try {
+        // Obtener todas las competencias y buscar por nombre amigable
+        const response = await axios.get(`${import.meta.env.VITE_API_URL}/tournaments`);
+        const nombreParam = decodeURIComponent(nombre || "").replace(/-/g, " ").toLowerCase();
+        const found = response.data.find((c: any) =>
+          c.nombre_torneo && c.nombre_torneo.replace(/\s+/g, '-').toLowerCase() === nombre
+        );
+        if (found && found.id) {
+          // Buscar por id para obtener todos los datos
+          const detalle = await axios.get(`${import.meta.env.VITE_API_URL}/tournaments/${found.id}`);
+          setCompetencia(detalle.data);
+        } else {
+          setCompetencia(null);
+        }
+      } catch (err) {
+        setError("Error al cargar la competencia.");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchCompetencia();
+  }, [nombre]);
 
   const getEstadoBadge = (estado: string) => {
     switch (estado) {
@@ -44,9 +55,23 @@ const CompetenciaDetallePage = () => {
         return <Badge className="bg-blue-500 text-lg px-4 py-2">Inscripciones Abiertas</Badge>
       case "Programado":
         return <Badge className="bg-yellow-500 text-lg px-4 py-2">Programado</Badge>
+      case "Completado":
+        return <Badge className="bg-gray-500 text-lg px-4 py-2">Completado</Badge>
       default:
         return <Badge className="text-lg px-4 py-2">{estado}</Badge>
     }
+  }
+
+  if (loading) {
+    return <div className="text-center py-8">Cargando competencia...</div>
+  }
+
+  if (error) {
+    return <div className="text-center py-8 text-red-500">{error}</div>
+  }
+
+  if (!competencia) {
+    return <div className="text-center py-8 text-gray-500">No se encontró la competencia.</div>
   }
 
   return (
@@ -57,8 +82,8 @@ const CompetenciaDetallePage = () => {
           {/* Imagen */}
           <div className="relative h-64 md:h-80 lg:h-96 rounded-lg overflow-hidden">
             <img
-              src={competencia.imagen || "/placeholder.svg"}
-              alt={competencia.nombre}
+              src={`${cleanApiUrl(import.meta.env.VITE_API_URL)}/storage/${competencia.foto_torneo}`}
+              alt={competencia.nombre_torneo}
               className="w-full h-full object-cover"
             />
           </div>
@@ -67,10 +92,10 @@ const CompetenciaDetallePage = () => {
           <div className="space-y-6">
             <div>
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
-                <h1 className="text-3xl md:text-4xl font-bold text-gray-900">{competencia.nombre}</h1>
+                <h1 className="text-3xl md:text-4xl font-bold text-gray-900">{competencia.nombre_torneo}</h1>
                 {getEstadoBadge(competencia.estado)}
               </div>
-              <p className="text-gray-600 text-lg">{competencia.descripcion}</p>
+              <p className="text-gray-600 text-lg">{competencia.descripcion_torneo}</p>
             </div>
 
             <div className="space-y-4">
@@ -82,23 +107,20 @@ const CompetenciaDetallePage = () => {
               </div>
               <div className="flex items-center text-gray-700">
                 <Calendar className="w-5 h-5 mr-3 text-blue-600" />
-                <span className="font-medium">{new Date(competencia.fecha).toLocaleDateString("es-ES")}</span>
+                <span className="font-medium">{formatFecha(competencia.fecha_torneo)}</span>
               </div>
               <div className="flex items-center text-gray-700">
-                <User className="w-5 h-5 mr-3 text-blue-600" />
-                <span className="font-medium">{competencia.encargado.nombre}</span>
-              </div>
-              <div className="flex items-center text-gray-700">
-                <Phone className="w-5 h-5 mr-3 text-blue-600" />
-                <span className="font-medium">{competencia.encargado.contacto}</span>
+                <span className="font-medium">Categoría: {competencia.categoria}</span>
               </div>
             </div>
 
             <div className="flex flex-col sm:flex-row gap-4">
+               {/* 
               <Button size="lg" className="flex-1">
                 <Users className="w-4 h-4 mr-2" />
                 Inscribirse
               </Button>
+              */}
               <Button variant="outline" size="lg" className="flex-1 bg-transparent">
                 <Download className="w-4 h-4 mr-2" />
                 Descargar Planilla
@@ -126,16 +148,12 @@ const CompetenciaDetallePage = () => {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
-                    <span className="font-semibold">Horarios:</span>
-                    <p className="text-gray-600">{competencia.horarios}</p>
-                  </div>
-                  <div>
                     <span className="font-semibold">Valor de Inscripción:</span>
-                    <p className="text-gray-600">{competencia.valorInscripcion}</p>
+                    <p className="text-gray-600">{competencia.valor_inscripcion}</p>
                   </div>
                   <div>
                     <span className="font-semibold">Valor de Arbitraje:</span>
-                    <p className="text-gray-600">{competencia.valorArbitraje}</p>
+                    <p className="text-gray-600">{competencia.valor_arbitraje}</p>
                   </div>
                 </CardContent>
               </Card>
@@ -150,11 +168,11 @@ const CompetenciaDetallePage = () => {
                 <CardContent className="space-y-4">
                   <div>
                     <span className="font-semibold">Encargado:</span>
-                    <p className="text-gray-600">{competencia.encargado.nombre}</p>
+                    <p className="text-gray-600">{competencia.encargado_nombre}</p>
                   </div>
                   <div>
                     <span className="font-semibold">Contacto:</span>
-                    <p className="text-gray-600">{competencia.encargado.contacto}</p>
+                    <p className="text-gray-600">{competencia.encargado_celular}</p>
                   </div>
                   <Button variant="outline" className="w-full bg-transparent">
                     <Phone className="w-4 h-4 mr-2" />
@@ -178,22 +196,22 @@ const CompetenciaDetallePage = () => {
                   <div className="text-center p-4 bg-yellow-50 rounded-lg border-2 border-yellow-200">
                     <Trophy className="w-8 h-8 mx-auto mb-2 text-yellow-600" />
                     <h3 className="font-semibold text-lg">1er Puesto</h3>
-                    <p className="text-gray-600">{competencia.premiacion.primero}</p>
+                    <p className="text-gray-600">{competencia.premio_1er_puesto}</p>
                   </div>
                   <div className="text-center p-4 bg-gray-50 rounded-lg border-2 border-gray-200">
                     <Trophy className="w-8 h-8 mx-auto mb-2 text-gray-600" />
                     <h3 className="font-semibold text-lg">2do Puesto</h3>
-                    <p className="text-gray-600">{competencia.premiacion.segundo}</p>
+                    <p className="text-gray-600">{competencia.premio_2do_puesto}</p>
                   </div>
                   <div className="text-center p-4 bg-orange-50 rounded-lg border-2 border-orange-200">
                     <Trophy className="w-8 h-8 mx-auto mb-2 text-orange-600" />
                     <h3 className="font-semibold text-lg">3er Puesto</h3>
-                    <p className="text-gray-600">{competencia.premiacion.tercero}</p>
+                    <p className="text-gray-600">{competencia.premio_3er_puesto}</p>
                   </div>
                   <div className="text-center p-4 bg-blue-50 rounded-lg border-2 border-blue-200">
                     <Trophy className="w-8 h-8 mx-auto mb-2 text-blue-600" />
                     <h3 className="font-semibold text-lg">4to Puesto</h3>
-                    <p className="text-gray-600">{competencia.premiacion.cuarto}</p>
+                    <p className="text-gray-600">{competencia.premio_4to_puesto}</p>
                   </div>
                 </div>
               </CardContent>
@@ -210,8 +228,7 @@ const CompetenciaDetallePage = () => {
               </CardHeader>
               <CardContent>
                 <p className="text-gray-600 mb-6">
-                  Accede al reglamento oficial del torneo para conocer todas las reglas y normativas que rigen la
-                  competencia.
+                  Accede al reglamento oficial del torneo para conocer todas las reglas y normativas que rigen la competencia.
                 </p>
                 <Button size="lg" className="w-full md:w-auto">
                   <Download className="w-4 h-4 mr-2" />

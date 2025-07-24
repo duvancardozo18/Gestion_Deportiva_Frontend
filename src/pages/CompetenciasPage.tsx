@@ -147,7 +147,7 @@ const CompetenciasPage = () => {
                   <span>{competencia.municipio}</span>
                 </div>
               </div>
-              <Link to={`/competencias/${competencia.id}`}>
+              <Link to={`/competencia/${encodeURIComponent(competencia.nombre_torneo.replace(/\s+/g, '-').toLowerCase())}`}>
                 <Button className="w-full">Ver Detalles</Button>
               </Link>
             </CardContent>

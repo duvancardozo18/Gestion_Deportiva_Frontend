@@ -26,8 +26,8 @@ const Header = () => {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2">
-            <img src="/placeholder.svg?height=40&width=40" alt="Liga Logo" className="w-10 h-10 rounded-full" />
-            <span className="font-bold text-xl text-blue-900">Liga Fútsal</span>
+            <img src="/logo-liga.png" alt="Liga Logo" className="w-10 h-10 rounded-full" />
+            <span className="font-bold text-xl text-blue-900">Lifutsal</span>
           </Link>
 
           {/* Desktop Navigation */}
