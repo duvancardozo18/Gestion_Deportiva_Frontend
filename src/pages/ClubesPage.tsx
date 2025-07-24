@@ -2,13 +2,13 @@ import { useEffect, useState } from "react"
 import axios from "axios"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
 import { MapPin, User, Phone } from "lucide-react"
 
 const ClubesPage = () => {
   const [clubes, setClubes] = useState([]) // Estado para almacenar los clubes
   const [loading, setLoading] = useState(true) // Estado para manejar el loading
   const [error, setError] = useState(null) // Estado para manejar errores
+  const cleanApiUrl = (url: string) => url.replace(/\/api\/?$/, "")
 
   useEffect(() => {
     const fetchClubes = async () => {
@@ -16,7 +16,7 @@ const ClubesPage = () => {
        const response = await axios.get(`${import.meta.env.VITE_API_URL}/clubs`)
         setClubes(response.data) // Asume que el backend devuelve un array de clubes
       } catch (err) {
-        setError("Error al cargar los clubes")
+       
       } finally {
         setLoading(false)
       }
@@ -79,29 +79,32 @@ const ClubesPage = () => {
               <CardHeader className="text-center pb-4">
                 <div className="flex justify-center mb-4">
                   <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center border-2 border-gray-200">
-                    <img src={club.foto_logo} className="w-full h-full object-cover rounded-full" />
+                    <img src={`${cleanApiUrl(import.meta.env.VITE_API_URL)}/storage/${club.foto_logo}`} className="w-full h-full object-cover rounded-full" />
                   </div>
                 </div>
                 <CardTitle className="text-xl mb-2">{club.nombre_club}</CardTitle>
-                <Badge className="bg-green-500">Activo</Badge>
+                <Badge className="bg-green-700 text-lg">Activo</Badge>
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="flex items-center text-gray-600">
                   <MapPin className="w-4 h-4 mr-2" />
-                  <span>{club.municipio}</span>
+                  <span><strong>Municipio:</strong> {club.municipio}</span>
                 </div>
                 <div className="flex items-center text-gray-600">
                   <User className="w-4 h-4 mr-2" />
-                  <span>{club.nombre_presidente}</span>
+                  <span><strong>Presidente:</strong> {club.nombre_presidente}</span>
                 </div>
                 <div className="flex items-center text-gray-600">
                   <Phone className="w-4 h-4 mr-2" />
-                  <span>{club.celular}</span>
+                  <span><strong>Celular:</strong> {club.celular}</span>
                 </div>
               
+                
+                {/* 
                 <Button className="w-full mt-4 bg-transparent" variant="outline">
                   Ver Detalles
                 </Button>
+                */}
               </CardContent>
             </Card>
           ))}

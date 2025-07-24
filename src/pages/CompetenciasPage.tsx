@@ -1,6 +1,5 @@
-"use client"
-
-import { useState } from "react"
+import { useEffect, useState } from "react"
+import axios from "axios"
 import { Link } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -10,52 +9,32 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Calendar, MapPin, Search, Filter, Users } from "lucide-react"
 
 const CompetenciasPage = () => {
+  const [competencias, setCompetencias] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
   const [searchTerm, setSearchTerm] = useState("")
   const [filterEstado, setFilterEstado] = useState("todos")
+  const cleanApiUrl = (url: string) => url.replace(/\/api\/?$/, "")
 
-  // Mock data - En producción esto vendría de la API
-  const competencias = [
-    {
-      id: 1,
-      nombre: "Torneo Apertura 2024",
-      estado: "En Curso",
-      municipio: "Medellín",
-      lugar: "Coliseo Mayor",
-      fecha: "2024-01-15",
-      imagen: "/placeholder.svg?height=200&width=300",
-      encargado: "Juan Pérez",
-    },
-    {
-      id: 2,
-      nombre: "Copa Interclubes",
-      estado: "Inscripciones Abiertas",
-      municipio: "Bello",
-      lugar: "Polideportivo Central",
-      fecha: "2024-02-01",
-      imagen: "/placeholder.svg?height=200&width=300",
-      encargado: "María González",
-    },
-    {
-      id: 3,
-      nombre: "Torneo Juvenil",
-      estado: "Programado",
-      municipio: "Itagüí",
-      lugar: "Cancha Municipal",
-      fecha: "2024-02-15",
-      imagen: "/placeholder.svg?height=200&width=300",
-      encargado: "Carlos Rodríguez",
-    },
-    {
-      id: 4,
-      nombre: "Copa Femenina 2023",
-      estado: "Completado",
-      municipio: "Envigado",
-      lugar: "Polideportivo Sur",
-      fecha: "2023-12-10",
-      imagen: "/placeholder.svg?height=200&width=300",
-      encargado: "Ana Martínez",
-    },
-  ]
+  const formatFecha = (fecha: string) => {
+  const date = new Date(fecha)
+  if (isNaN(date.getTime())) return fecha // Si la fecha no es válida, retorna el valor original
+  return `${date.getDate().toString().padStart(2, "0")}/${(date.getMonth()+1).toString().padStart(2, "0")}/${date.getFullYear()}`
+ }
+
+  useEffect(() => {
+    const fetchCompetencias = async () => {
+      try {
+        const response = await axios.get(`${import.meta.env.VITE_API_URL}/tournaments`)
+        setCompetencias(response.data)
+      } catch (err) {
+        console.error("Error al cargar las competencias:", err)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchCompetencias()
+  }, [])
 
   const getEstadoBadge = (estado: string) => {
     switch (estado) {
@@ -72,17 +51,24 @@ const CompetenciasPage = () => {
     }
   }
 
-  const filteredCompetencias = competencias.filter((competencia) => {
+  const filteredCompetencias = competencias.filter((competencia: any) => {
     const matchesSearch =
-      competencia.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      competencia.municipio.toLowerCase().includes(searchTerm.toLowerCase())
+      competencia.nombre?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      competencia.municipio?.toLowerCase().includes(searchTerm.toLowerCase())
 
     if (filterEstado === "todos") {
       return matchesSearch
     }
-
     return matchesSearch && competencia.estado === filterEstado
   })
+
+  if (loading) {
+    return <div className="text-center py-8">Cargando competencias...</div>
+  }
+
+  if (error) {
+    return <div className="text-center py-8 text-red-500">{error}</div>
+  }
 
   return (
     <div className="min-h-screen py-8">
@@ -129,43 +115,44 @@ const CompetenciasPage = () => {
 
         {/* Lista de Competencias */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredCompetencias.map((competencia) => (
-            <Card key={competencia.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-              <div className="relative h-48">
-                <img
-                  src={competencia.imagen || "/placeholder.svg"}
-                  alt={competencia.nombre}
-                  className="w-full h-full object-cover"
-                />
+          {filteredCompetencias.map((competencia: any) => (
+          <Card key={competencia.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+            <div className="relative h-48">
+              <img
+                src={`${cleanApiUrl(import.meta.env.VITE_API_URL)}/storage/${competencia.foto_torneo}`}
+                alt={competencia.nombre_torneo}
+                className="w-full h-full object-cover"
+              />
+            </div>
+            <CardHeader>
+              <div className="flex justify-between items-start mb-2">
+                <div>
+                  <CardTitle className="text-lg">{competencia.nombre_torneo}</CardTitle>
+                  <div className="flex items-center mt-1 text-sm text-gray-500">
+                    <Calendar className="w-4 h-4 mr-1" />
+                    <span>{formatFecha(competencia.fecha_torneo)}</span>
+                  </div>
+                </div>
+                {getEstadoBadge(competencia.estado)}
               </div>
-              <CardHeader>
-                <div className="flex justify-between items-start mb-2">
-                  <CardTitle className="text-lg">{competencia.nombre}</CardTitle>
-                  {getEstadoBadge(competencia.estado)}
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2 text-sm text-gray-600 mb-4">
+                 <div className="flex items-center">
+                  <span className="font-semibold mr-2">Categoría:</span>
+                  <span>{competencia.categoria}</span>
                 </div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2 text-sm text-gray-600 mb-4">
-                  <div className="flex items-center">
-                    <MapPin className="w-4 h-4 mr-2" />
-                    <span>
-                      {competencia.municipio} - {competencia.lugar}
-                    </span>
-                  </div>
-                  <div className="flex items-center">
-                    <Calendar className="w-4 h-4 mr-2" />
-                    <span>{new Date(competencia.fecha).toLocaleDateString("es-ES")}</span>
-                  </div>
-                  <div className="flex items-center">
-                    <Users className="w-4 h-4 mr-2" />
-                    <span>{competencia.encargado}</span>
-                  </div>
+                <div className="flex items-center">
+                  <span className="font-semibold mr-2">Municipio:</span>
+                  <span>{competencia.municipio}</span>
                 </div>
-                <Link to={`/competencias/${competencia.id}`}>
-                  <Button className="w-full">Ver Detalles</Button>
-                </Link>
-              </CardContent>
-            </Card>
+              </div>
+              <Link to={`/competencias/${competencia.id}`}>
+                <Button className="w-full">Ver Detalles</Button>
+              </Link>
+            </CardContent>
+          </Card>
+
           ))}
         </div>
 
