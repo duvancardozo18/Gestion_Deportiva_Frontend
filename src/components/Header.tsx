@@ -85,7 +85,9 @@ const Header = () => {
           </nav>
 
           {/* Login Button */}
-          <Button className="hidden lg:flex">Ingresar</Button>
+          <a href="https://gestor.audiosplay.com/admin/login" className="hidden lg:block" target="_blank" rel="noopener noreferrer">
+            <Button className="hidden lg:flex">Ingresar</Button>
+          </a>
 
           {/* Mobile Menu Button */}
           <Button variant="outline" size="icon" className="lg:hidden bg-transparent" onClick={() => setIsOpen(!isOpen)}>
