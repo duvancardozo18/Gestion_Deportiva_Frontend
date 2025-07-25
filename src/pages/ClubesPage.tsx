@@ -5,23 +5,30 @@ import { Badge } from "@/components/ui/badge"
 import { MapPin, User, Phone } from "lucide-react"
 
 const ClubesPage = () => {
-  const [clubes, setClubes] = useState([]) // Estado para almacenar los clubes
+  type Club = {
+    id: number;
+    municipio: string;
+    foto_logo: string;
+    nombre_club: string;
+    nombre_presidente: string;
+    celular: string;
+  };
+  const [clubes, setClubes] = useState<Club[]>([]) // Estado para almacenar los clubes
   const [loading, setLoading] = useState(true) // Estado para manejar el loading
-  const [error, setError] = useState(null) // Estado para manejar errores
+  // const [error, setError] = useState(null) // Estado para manejar errores
   const cleanApiUrl = (url: string) => url.replace(/\/api\/?$/, "")
 
   useEffect(() => {
     const fetchClubes = async () => {
       try {
-       const response = await axios.get(`${import.meta.env.VITE_API_URL}/clubs`)
-        setClubes(response.data) // Asume que el backend devuelve un array de clubes
+        const response = await axios.get(`${import.meta.env.VITE_API_URL}/clubs`)
+        setClubes(response.data)
       } catch (err) {
-       
+        // setError("Error al cargar clubes")
       } finally {
         setLoading(false)
       }
     }
-
     fetchClubes()
   }, [])
 
@@ -29,9 +36,9 @@ const ClubesPage = () => {
     return <div className="text-center py-8">Cargando clubes...</div>
   }
 
-  if (error) {
-    return <div className="text-center py-8 text-red-500">{error}</div>
-  }
+  // if (error) {
+  //   return <div className="text-center py-8 text-red-500">{error}</div>
+  // }
 
   return (
     <div className="min-h-screen py-8">

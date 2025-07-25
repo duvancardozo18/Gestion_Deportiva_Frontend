@@ -6,12 +6,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Calendar, MapPin, Search, Filter, Users } from "lucide-react"
+import { Calendar, Search, Filter } from "lucide-react"
 
 const CompetenciasPage = () => {
   const [competencias, setCompetencias] = useState([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+  // const [error, setError] = useState(null)
   const [searchTerm, setSearchTerm] = useState("")
   const [filterEstado, setFilterEstado] = useState("todos")
   const cleanApiUrl = (url: string) => url.replace(/\/api\/?$/, "")
@@ -66,9 +66,9 @@ const CompetenciasPage = () => {
     return <div className="text-center py-8">Cargando competencias...</div>
   }
 
-  if (error) {
-    return <div className="text-center py-8 text-red-500">{error}</div>
-  }
+  // if (error) {
+  //   return <div className="text-center py-8 text-red-500">{error}</div>
+  // }
 
   return (
     <div className="min-h-screen py-8">

@@ -40,7 +40,7 @@ const CompetenciaDetallePage = () => {
       try {
         // Obtener todas las competencias y buscar por nombre amigable
         const response = await axios.get(`${import.meta.env.VITE_API_URL}/tournaments`);
-        const nombreParam = decodeURIComponent(nombre || "").replace(/-/g, " ").toLowerCase();
+        // const nombreParam = decodeURIComponent(nombre || "").replace(/-/g, " ").toLowerCase();
         const found = response.data.find((c: any) =>
           c.nombre_torneo && c.nombre_torneo.replace(/\s+/g, '-').toLowerCase() === nombre
         );

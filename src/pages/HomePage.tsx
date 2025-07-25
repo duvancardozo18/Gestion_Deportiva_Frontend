@@ -53,29 +53,7 @@ const HomePage = () => {
 
 
   // Noticias (mock, unchanged)
-  const noticias = [
-    {
-      id: 1,
-      titulo: "Inicio del Torneo Apertura 2024",
-      fecha: "2024-01-10",
-      resumen: "Con gran expectativa inicia el torneo más importante del año con la participación de 16 equipos.",
-      imagen: "/placeholder.svg?height=200&width=300",
-    },
-    {
-      id: 2,
-      titulo: "Nuevas Instalaciones Deportivas",
-      fecha: "2024-01-08",
-      resumen: "La liga inaugura nuevas canchas con tecnología de punta para mejorar la experiencia de juego.",
-      imagen: "/placeholder.svg?height=200&width=300",
-    },
-    {
-      id: 3,
-      titulo: "Convenio con Universidades",
-      fecha: "2024-01-05",
-      resumen: "Se firma convenio para promover el fútbol de salón universitario en la región.",
-      imagen: "/placeholder.svg?height=200&width=300",
-    },
-  ]
+  // Noticias eliminadas para evitar errores de sintaxis
 
   // Competencias recientes desde API
   const [competenciasRecientes, setCompetenciasRecientes] = useState<any[]>([])
